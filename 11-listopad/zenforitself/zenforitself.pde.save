@@ -1,0 +1,145 @@
+ArrayList d;
+int ID = 0;
+
+int [][] change;
+
+void setup(){
+	size(320,240,P2D);
+
+	change = new int[width][height];
+
+	for(int y = 0; y < height; y++){
+		for(int x = 0; x < width; x++){
+			int q = (int)random(11);			
+			change[x][y] = q;
+		}
+	}
+
+	
+	d = new ArrayList(0);
+
+	for(int i = 0 ; i< 1000;i++)
+	d.add(new Dupliciter((int)random(width-1),(int)random(height-1)));
+
+
+}
+
+
+
+void draw(){
+
+fill(0,50);
+rect(0,0,width,height);
+
+	for(int i = 0;i<d.size();i++){
+		Dupliciter tmp = (Dupliciter)d.get(i);
+		if(tmp.ignore){
+
+		}else{
+		switch(change[tmp.cx][tmp.cy]){
+				case 0:
+				tmp.x = -1;
+				tmp.y = -1;
+				break;
+  				case 1:
+                                tmp.x = 0;
+                                tmp.y = -1;
+                                break;
+  				case 2:
+                                tmp.x = 1;
+                                tmp.y = -1;
+                                break;
+  				case 3:
+                                tmp.x = -1;
+                                tmp.y = 0;
+                                break;
+  				case 4:
+                                tmp.x = 1;
+                                tmp.y = 0;
+                                break;
+  				case 5:
+                                tmp.x = -1;
+                                tmp.y = 1;
+                                break;
+ 				case 6:
+                                tmp.x = 0;
+                                tmp.y = 1;
+                                break;
+				case 7:
+                                tmp.x = 1;
+                                tmp.y = 1;
+                                break;
+ 				case 9:
+				tmp.cloneit();
+                                break;
+  				case 10:
+                                tmp.deleteit();
+                                break;
+
+		}
+		tmp.ignore = true;
+		tmp.life = 0;
+		change[tmp.cx][tmp.cy] = (int)(random(11));
+}
+		tmp.draw();
+}
+
+class Dupliciter{
+
+	int x,y,cx,cy;
+	int id;
+	boolean ignore = true;
+	int timer,life = 0;
+
+	Dupliciter(){
+		cx = width / 2;
+		cy = height / 2;
+		id = ID++;
+		timer = (int)random(300);
+	}
+
+	 Dupliciter(int _x,int _y){
+                cx = _x;
+                cy = _y;
+                id = ID++;
+		timer = (int)random(300);
+
+        }
+
+
+	void move(){
+		life ++;
+
+		if(life>timer){
+			ignore = false;
+		}
+
+		cx+=x;
+		cy+=y;
+		
+		if(cx>=width)cx=0;
+		if(cx<0)cx=width-1;
+
+		if(cy>=height)cy=0;
+		if(cy<0)cy=height-1;
+
+	}
+	
+	void draw(){
+		move();
+		stroke(255,100);
+		point(cx,cy);
+
+	}
+
+	void cloneit(){
+		d.add(new Dupliciter(cx+1,cy));
+
+	}
+	
+	void deleteit(){
+                d.remove(this);
+
+        }
+
+}

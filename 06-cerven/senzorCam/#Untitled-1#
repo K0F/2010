@@ -1,0 +1,37 @@
+
+
+
+Skruz s[];
+
+void setup(){
+
+	size(640,480,P3D);
+	s = new Skruz[5];
+	
+	for( int i = 0 ; i < 10 ; i++)
+}
+
+void draw(){
+	background(0);
+	
+	stroke(255);
+	
+	
+
+
+}
+
+class Skruz{
+	vecor center;
+	float R;
+	vector[] pos;
+	
+	Skruz(float _x,float _y,float _z,float _R){
+		R=_R;
+		center = new Vector(_x,_y,_z);
+		for(int i = 0;i<res;i++){
+			pos= (PVector[])append(pos,new Vector(cos(i))*R+center.x,sin(i)*R+center.y,0);
+		}
+	}
+
+}

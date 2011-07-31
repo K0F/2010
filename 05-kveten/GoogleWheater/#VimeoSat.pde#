@@ -1,0 +1,98 @@
+import java.net.*;
+import java.io.*;
+
+
+/*
+Authorization: OAuth realm="",
+oauth_consumer_key="c1f5add1d34817a6775d10b3f6821268",
+oauth_version="1.0",
+oauth_signature_method="HMAC-SHA1",
+oauth_timestamp="1273015230",
+oauth_nonce="033508fdbd7ba9edf2aec63c19f9e7ca",
+oauth_token="baf0a5ea862f5d47680ad99c3f9d3336",
+oauth_signature="eOfPn9jA4OgN%2B0ZaU6VwARAax%2Fw%3D"
+
+
+http://vimeo.com/api/rest/v2?method=vimeo.videos.getLikes
+*/
+
+import proxml.*;
+
+
+String data[];
+XMLInOut xmlIO;
+XMLElement xmlPulses;
+
+
+void setup(){
+
+
+	xmlIO = new XMLInOut(this);
+	xmlTemp = new XMLElement("temp");
+
+
+
+
+
+
+	try{
+		//URL vimeo = new URL("http://www.wunderground.com/global/CZ.html");
+		URL vimeo = new URL("http://www.google.com/ig/api?weather=Mountain+View");
+		BufferedReader in = new BufferedReader(
+		                            new InputStreamReader(
+		                                    vimeo.openStream()));
+
+		data = new String[0];
+		String inputLine;
+
+		while ((inputLine = in.readLine()) != null){
+			//System.out.println(inputLine);
+			data = (String[])append(data,inputLine);
+		}
+
+		in.close();
+
+	}catch(Exception e){
+		println(e);
+	}
+
+	saveStrings("current.xml",data);
+
+	try {
+		xmlIO.loadElement("pulses.xml");
+	} catch (Exception e) {
+		// the XML file could not be found, create a new XML root
+		xmlEvent(new XMLElement("temperature"));
+	}
+
+
+}
+
+void xmlEvent(XMLElement element) {
+	xmlPulses = element;
+	initPulses();
+}
+
+void initPulses() {
+	// create temporary XML nodes
+	XMLElement temp;
+	XMLElement hum;
+	XMLElement tlak;
+
+	// parse through all pulse nodes to create Pulse objects
+	for (int i=0; i < xmlPulses.countChildren(); i++) {
+		pulse = xmlPulses.getChild(i);
+		pos = pulse.getChild(0);
+		col = pulse.getChild(1);
+
+		addSavedPulse(
+		        pos.getIntAttribute("x"),
+		        pos.getIntAttribute("y"),
+		        col.getIntAttribute("rgb")
+		);
+	}
+}
+
+
+
+

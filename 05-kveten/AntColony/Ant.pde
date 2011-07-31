@@ -1,0 +1,541 @@
+Ant[] A = new Ant[0];
+static int numberOfAnt = 0;
+
+class Ant
+{
+            int id;
+            int maxLife, life, produceTime;
+            float lastCorner, fromLastCorner;
+            float[] videlID;
+            Point origin, moveWay;
+            Vector move;
+            Spray parentSpray, targetSpray;
+            float bodySize, viewSize, rozhlidnuti;
+            float bboxX1, bboxX2, bboxY1, bboxY2, bboxZ1, bboxZ2;
+
+            PseudoRandom rnd ;
+            Feromon nejlepsiFeromon = null;
+            boolean nahodnyPohyb = true;
+            boolean isOver, isSelected;
+	    float tailX[];
+	    float tailY[];
+	    	    int tailLen;
+	    int cc = 0;
+
+            Ant(Spray parent, Spray target)
+            {
+                        id = numberOfAnt;
+                        numberOfAnt ++;
+                        this.parentSpray = parent;
+                        this.targetSpray = target;
+
+                         tailLen = maxLife = 2000;
+                        life = maxLife;
+                        produceTime = floor(random(40,100));
+                        lastCorner = 60;
+                        bodySize = 10;
+                        rozhlidnuti = floor(random(100,150));
+                        viewSize = random(300,800);
+                        fromLastCorner = lastCorner;
+
+                        moveWay =  new Point(parent.origin);
+                        origin = new Point(parent.origin);
+                        move = new Vector(parent.dir);
+                        rnd = new PseudoRandom(10,27);
+
+                        RefreshBBox();
+			
+			tailX = new float[tailLen];
+			tailY = new float[tailLen];
+			
+			for(int i =0;i<tailLen;i++){
+				tailX[i] = origin.x;
+				tailY[i] = origin.y;
+			}
+			
+                        videlID =new float[numberOfSpray];
+                        videlID[parentSpray.id] = life;
+
+                        A = (Ant[]) append (A, this);
+            }
+
+            float IsInRange(Point test, float range)
+            {
+                        if(test.x > bboxX1 && test.x < bboxX2)
+                        {
+                                    if(test.y > bboxY1 && test.y < bboxY2)
+                                    {
+                                                if(test.z > bboxZ1 && test.z < bboxZ2)
+                                                {
+                                                            if(! origin.CompareTo(test))
+                                                            {
+                                                                        float dis = origin.DistanceTo(test);
+                                                                        if( dis < range)
+                                                                        {
+                                                                                    return dis;           
+                                                                        }
+                                                            }
+                                                }
+                                    }
+                        }
+                        return -1;
+            }
+
+            void TryFeromon(Feromon f)
+            {
+                        try
+                        {
+                                    if(f.parentLife > nejlepsiFeromon.parentLife)
+                                    {
+                                                nejlepsiFeromon = f;       
+                                    }
+                        }
+                        catch(NullPointerException e)
+                        {
+                                    nejlepsiFeromon = f;       
+                        }      
+            }
+
+            boolean IsVisible(Point target)
+            {
+                        if(W.length < 1) 
+                        {
+                                    if (IsInRange(target, viewSize) == -1) return false;
+                                    else return true;
+                        }
+                        else
+                        {
+                                    Line seeLn = new Line(origin, target);         
+                                    boolean neniBranen = true;
+                                    for(int i = 0; i < W.length; i++)
+                                    {
+                                                Point crossPt = seeLn.LineLineIntersection(W[i].wall);
+                                                if (crossPt != null) 
+                                                {
+                                                            neniBranen = false;
+                                                            break;
+                                                }
+                                    }  
+                                    if(neniBranen)
+                                    {
+                                                if (IsInRange(target, viewSize) == -1) return false;           
+                                                return true;
+                                    }
+                                    return false;
+                        }
+            }
+
+            boolean IsToTarget(Feromon f)
+            {
+                        if (targetSpray.id == f.parentFrom) return true;
+                        return false;      
+            }
+
+            boolean IsLive()
+            {
+                        if (life > 0) return true;
+                        Kill(); 
+                        return false;
+            }
+
+            void Calculate()
+            {
+                        if(IsLive())
+                        {
+                                    ProduceFeromon();
+                                    RefreshBBox();
+
+                                    if (IsInRange(targetSpray.origin, viewSize/10) != -1)  
+                                    {
+                                                life = 1;   
+                                    }
+                                    else
+                                    {
+                                                int[] seeID = new int[0];
+                                                if (time % rozhlidnuti == 0)
+                                                {
+                                                            nejlepsiFeromon = null;
+
+                                                            nahodnyPohyb = true;
+
+                                                            for(int i = 0; i < F.length; i++)
+                                                            {
+                                                                        if(IsToTarget(F[i]))
+                                                                        {
+                                                                                    if (IsVisible(F[i].origin))
+                                                                                    {
+                                                                                                seeID = (int[]) append(seeID,i);   
+                                                                                    }
+                                                                        }
+                                                            }
+                                                            for (int i = 0 ; i < seeID.length; i++)
+                                                            {
+                                                                        TryFeromon(F[seeID[i]]);
+                                                            }
+                                                }
+
+
+                                                if(nejlepsiFeromon != null) 
+                                                {
+                                                            Vector nejVec =  new Vector(origin, nejlepsiFeromon.origin);
+                                                            nejVec.Unitize();
+
+                                                            move.Plus(nejVec);
+                                                            nahodnyPohyb = false;           
+                                                }
+
+
+                                                // odpudiva sila proti pruchodu skrz jineho mravence
+                                                for(int i = 0; i < A.length; i++)
+                                                {
+                                                            float dis = IsInRange(A[i].origin, bodySize);
+                                                            if(dis != -1)
+                                                            {
+                                                                        if( dis < bodySize && dis != 0)
+                                                                        {
+                                                                                    Vector odVec = new Vector (A[i].origin,origin);
+                                                                                    odVec.Unitize();
+                                                                                    odVec.MultipleBy(dis/bodySize);
+                                                                                    move.Plus(odVec);
+                                                                                    nahodnyPohyb = true;       
+                                                                        } 
+                                                            }
+                                                }
+
+                                              
+
+                                                if(nahodnyPohyb)
+                                                {
+                                                            Vector ranDir  = new Vector(rnd.Next()*TWO_PI, rnd.Next()*TWO_PI, 0.0);  
+                                                            move.Plus(ranDir);
+                                                }
+                                                  for(int i = 0; i < W.length; i++)
+                                                {
+                                                            Point temp = W[i].wall.GetClosestPoint(origin);
+                                                            float dis = IsInRange(temp, bodySize/2);
+
+                                                            if(dis != -1)
+                                                            {                 
+                                                                        Vector odVec = new Vector (temp,origin);
+                                                                        odVec.Unitize();
+                                                                        odVec.MultipleBy(dis/bodySize*100);
+                                                                        move.Plus(odVec);
+                                                                                                                                         //   nejlepsiFeromon = null;
+                                                            }
+                                                }
+                                    }
+
+                                    move.Unitize();
+                                                                      moveWay = origin;
+                                    origin.Plus(move);
+
+                                    fromLastCorner--;
+                                    life--;          
+                        }
+
+            }
+
+
+
+            void RefreshBBox()
+            {
+                        bboxX1 = origin.x - viewSize/2;
+                        bboxX2 = origin.x + viewSize/2;
+                        bboxY1 = origin.y - viewSize/2;
+                        bboxY2 = origin.y + viewSize/2;           
+                        bboxZ1 = origin.z - viewSize/2;
+                        bboxZ2 = origin.z + viewSize/2;           
+            }
+
+
+
+            boolean ProduceFeromon()
+            {
+                        if(time % produceTime == 0)
+                        {
+                                    new Feromon(this);
+                                    return true;           
+                        }
+                        return false;
+            }
+
+            void Kill()
+            {                        
+                        Ant[] temp = new Ant[0];
+                        int noAnt = 0;
+                        if(A.length > 0)
+                        {
+                                    for(int i = 0 ; i < A.length; i++)
+                                    {
+                                                if(i != id)
+                                                {
+                                                            A[i].id = noAnt;
+                                                            temp = (Ant[]) append(temp,A[i]);
+                                                            noAnt ++;
+                                                }            
+                                    }
+
+                                    numberOfAnt --;
+                        }
+                        A = temp;
+            }
+
+            boolean IsOver()
+            {
+                        int scx,scy;
+                        int tolerance = 10;
+                        // mouse hit detection using screnX, screenY
+                        scx = int(screenX(origin.x, origin.y, origin.z));
+                        scy = int(screenY(origin.x, origin.y, origin.z));
+
+                        if (scx > mouseX-tolerance && scx < mouseX+tolerance && scy > mouseY-tolerance && scy < mouseY+tolerance) return true;
+                        else	return false;
+            }
+
+            String[] GetInfo()
+            {
+                        String[] answ = new String[0];
+                        answ = append(answ,"Name : Ant " + id);
+
+                        answ = append(answ,"");
+                        answ = append(answ, "Life : " + life);
+                        answ = append(answ, "FromID : " + parentSpray.id);
+                        answ = append(answ, "ToID : " + targetSpray.id);
+                        answ = append(answ,"");
+
+                        for(int i = 0; i < videlID.length; i++)
+                        {
+                                    answ = append(answ, "VidelID " + i + " : " + videlID[i]);
+                        }
+                        return answ;
+            }
+
+            void Draw()
+            {
+                        isOver = IsOver();
+
+                        if(isSelected) 
+                        {
+                                    stroke(232,120,20);
+                                    new Circle(new Plane(origin),viewSize/2).Draw();
+
+                                    pushMatrix();
+                                    translate(origin.x, origin.y, origin.z);
+                                    fill(232,120,20);
+                                    stroke(255);
+                                    ellipse(0,0,bodySize, bodySize);
+                                    popMatrix();
+
+                                    stroke(0);  
+                                    if(nejlepsiFeromon != null) new Line(origin, nejlepsiFeromon.origin).Draw();
+
+                        }
+                        else if(isOver) stroke(26,120,200);
+                        else  stroke(232,120,20);
+
+
+                        new Circle(new Plane(origin),bodySize/2).Draw();
+			
+			
+			tailX[cc] = origin.x;
+			tailY[cc] = origin.y;
+			cc++;
+			
+			if(cc>tailLen)
+				cc = 0;
+			
+			pushStyle();
+			
+			stroke(0,50);
+			noFill();
+			
+			for(int i = 1 ;i<cc;i++){
+				if(i!=cc)
+				line(tailX[i],tailY[i],tailX[i-1],tailY[i-1]);
+			}
+			
+			popStyle();
+
+
+
+
+            }
+
+            void Graph()
+            {
+                        if(isSelected)
+                        {
+                                    float velikostOkna = 20;
+                                    float maxRadek = 3;
+                                    float maxSloupek = 8;
+
+                                    int poziceRadek, poziceSloupek;
+                                    poziceRadek = poziceSloupek = 0;
+
+                                    int poziceX, poziceY;
+                                    poziceX = 20;
+                                    poziceY = 200;
+
+                                    float[] graphValue = new float[0];
+                                    graphValue = (float[]) append(graphValue, lerp(0,255,life/maxLife));
+
+                                    for(int i = 0; i < videlID.length; i++)
+                                    {
+                                                graphValue = (float[]) append(graphValue, lerp(0,255,videlID[i]/maxLife));
+                                    }
+
+                                    noFill();
+                                    rect(poziceX+velikostOkna*poziceSloupek, poziceY+velikostOkna*poziceRadek, velikostOkna, velikostOkna); 
+                                    fill(255);
+                                    text(floor(graphValue[0]),poziceX+velikostOkna*poziceSloupek, poziceY+velikostOkna*poziceRadek+velikostOkna/2); 
+
+                                    poziceRadek = 1;
+                                    for(int i = 1 ;  i < graphValue.length; i++)
+                                    {                       
+                                                // fill(graphValue[i]);
+                                                if( poziceRadek < maxRadek && poziceSloupek < maxSloupek) 
+                                                {
+                                                            noFill();
+                                                            rect(poziceX+velikostOkna*poziceSloupek, poziceY+velikostOkna*poziceRadek, velikostOkna, velikostOkna); 
+                                                            fill(255);
+                                                            text(floor(graphValue[i]),poziceX+velikostOkna*poziceSloupek, poziceY+velikostOkna*poziceRadek+velikostOkna/2); 
+                                                }
+
+                                                poziceRadek ++;
+                                                if (poziceSloupek % maxSloupek == 0)
+                                                {
+                                                            poziceRadek = 0;
+                                                            poziceSloupek ++;        
+                                                }
+                                    }
+                        }
+            }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

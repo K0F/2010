@@ -1,0 +1,173 @@
+import processing.pdf.*;
+
+
+Camera cam;
+Toolbar tool;
+ExternalData ref;
+
+static int time;
+int speed = 3;
+
+boolean rec = false;
+
+void setup()
+{
+	size(1100,700,P3D);
+	//     frameRate(25);
+	// smooth();
+
+	cam = new Camera();
+	tool = new Toolbar(0,0,145,height);
+	ref = new ExternalData();
+	time = 0;
+	frameRate = 25;
+	ControlSetup();
+}
+
+void draw()
+{
+
+	if(rec){
+		beginRecord(PDF, "/desk/pdf_complex_out.pdf");
+		textFont(font);
+	}
+	background(255);
+
+	
+
+
+	// pocatek kresleni
+	cam.preDraw();
+	stroke(0);
+
+	for (int k = 0; k < speed; k++)
+	{
+		for(int i = 0; i < S.length; i++)
+		{
+			S[i].Calculate();
+		}
+
+		for(int i = 0; i < A.length; i++)
+		{
+			A[i].Calculate();
+		}
+
+		for(int i = 0; i < F.length; i++)
+		{
+			F[i].Calculate();
+		}
+
+		for(int i = 0; i < area.length; i++)
+		{
+			area[i].Calculate();
+		}
+
+		time ++;
+		if(time % 3000 == 0) ClearFeromons();
+	}
+
+	for(int i = 0; i < area.length; i++)
+	{
+		area[i].Draw();
+	}
+
+	for(int i = 0; i < S.length; i++)
+	{
+		S[i].Draw();
+	}
+	/*
+	            for(int i = 0; i < F.length; i++)
+	            {
+	                        F[i].Draw();
+	            }
+	*/
+	for(int i = 0; i < A.length; i++)
+	{
+		A[i].Draw();
+	}
+
+	for(int i = 0; i < W.length; i++)
+	{
+		W[i].Draw();
+	}
+
+
+	cam.postDraw();
+	
+	if(!rec)
+	tool.Draw();
+
+	if(rec){
+		endRecord();
+		rec = false;
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

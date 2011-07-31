@@ -1,0 +1,49 @@
+/**
+*
+*/
+
+import hipstersinc.sunflow.*;
+import hipstersinc.sunflow.shader.*;
+import hipstersinc.*;
+
+void setup() {
+	size(350, 200,"hipstersinc.P5Sunflow");
+	//noLoop();
+}
+
+
+void draw() {
+	background(0);
+
+	
+int numSpheres = 4;
+float yStep = width / 4 - frameCount;
+float y = 40;
+
+
+
+	for(int i=0; i<numSpheres; i++) {
+		
+
+		y += yStep;
+	}
+
+	saveFrame("out/fram####.png");
+}
+
+class Sph{
+
+
+
+void draw(){
+
+pushMatrix();
+		translate(y, height/2);
+
+		fill( 255 );
+		sphere(40);
+		popMatrix();
+
+}
+
+}

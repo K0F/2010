@@ -1,0 +1,89 @@
+import java.net.*;
+import java.io.*;
+
+
+/*
+Authorization: OAuth realm="",
+oauth_consumer_key="c1f5add1d34817a6775d10b3f6821268",
+oauth_version="1.0",
+oauth_signature_method="HMAC-SHA1",
+oauth_timestamp="1273015230",
+oauth_nonce="033508fdbd7ba9edf2aec63c19f9e7ca",
+oauth_token="baf0a5ea862f5d47680ad99c3f9d3336",
+oauth_signature="eOfPn9jA4OgN%2B0ZaU6VwARAax%2Fw%3D"
+
+
+http://vimeo.com/api/rest/v2?method=vimeo.videos.getLikes
+*/
+
+import proxml.*;
+
+
+String data[];
+
+XMLElement ellipses;
+XMLInOut xmlInOut;
+
+
+void setup(){ xmlInOut = new XMLInOut(this);
+
+
+
+ try{
+    xmlInOut.loadElement("ellipse.xml"); 
+  }catch(Exception e){
+    //if the xml file could not be loaded it has to be created
+    xmlEvent(new XMLElement("ellipses"));
+  }
+
+
+
+try{
+	URL vimeo = new URL("");
+	BufferedReader in = new BufferedReader(
+				new InputStreamReader(
+				vimeo.openStream()));
+
+	data = new String[0];
+	String inputLine;
+
+	while ((inputLine = in.readLine()) != null){
+	    //System.out.println(inputLine);
+		data = (String[])append(data,inputLine);
+	}
+
+	in.close();
+    
+}catch(Exception e){
+	println(e);
+}
+
+saveStrings("current.xml",data);
+
+}
+
+void xmlEvent(XMLElement element){
+
+
+}
+
+void initEllipses(){
+  ellipses.printElementTree(" ");
+  XMLElement ellipse;
+  XMLElement position;
+  XMLElement size;
+  
+  for(int i = 0; i < ellipses.countChildren();i++){
+    ellipse = ellipses.getChild(i);
+    position = ellipse.getChild(0);
+    size = ellipse.getChild(1);
+    ellipse(
+      position.getIntAttribute("xPos"),
+      position.getIntAttribute("yPos"),
+      size.getFloatAttribute("Xsize"),
+      size.getFloatAttribute("Ysize")
+    );
+  }
+}
+
+
